@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>恩嘻嘻優校車在哪裡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE   印刷海報的冷靜與直接：一眼看到下一班車。
+IDEA    絹印的校園公車時刻卡：米白紙、單色印刷藍、網點。
+PICTURE 每條路線是一條印刷藍色帶，最近的班次滿版上墨，旁邊用網點三角延伸出停靠站。
+COLOUR  紙 #EFEBE3、印刷藍 #2443B8；夜間為深藍紙與淡藍墨。
+TYPE    Noto Serif TC（標題、時間），IBM Plex Mono 只用於小型註記。
+*/
+:root{
+  color-scheme:light dark;
+  --paper:light-dark(#EFEBE3,#121629);
+  --paper-2:light-dark(#F7F4EF,#191E36);
+  --ink:light-dark(#2443B8,#A9BCFF);
+  --on-ink:light-dark(#F7F4EF,#0F1326);
+  --muted:light-dark(#5C5B66,#9A9EB5);
+  --rule:light-dark(rgba(36,67,184,.22),rgba(169,188,255,.22));
+  --grain-blend:light-dark(multiply,screen);
+  --grain-op:light-dark(.2,.08);
+  --title-tracking:.02em;   /* ← 標題字距：正值拉開、負值收緊，例如 .04em 或 -.06em */
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
+}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0;min-width:0}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body,body *{-webkit-user-select:none;user-select:none;caret-color:transparent;-webkit-touch-callout:none}
+input,select{-webkit-user-select:auto;user-select:auto;caret-color:auto}
+body{
+  font:400 17px/1.5 var(--serif);
+  background:var(--paper);color:var(--ink);
+  max-width:640px;margin:0 auto;overflow-x:clip;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  min-height:100vh;
+}
+/* 紙張顆粒 */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:10;
+  opacity:var(--grain-op);mix-blend-mode:var(--grain-blend);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .42 0 0 0 0 .38 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* 刊頭 */
+.masthead{padding:32px 20px 22px}
+.masthead h1{
+  font-weight:900;font-size:clamp(2.6rem,12vw,4.1rem);line-height:1.02;
+  letter-spacing:var(--title-tracking);text-wrap:balance;filter:url(#ink-bleed);
+}
+.meta{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;
+  margin-top:18px;padding-top:10px;border-top:1.5px solid var(--ink);
+  font:500 .8rem/1.4 var(--mono);
+}
+.meta #clock{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+
+/* 路線清單：藍色條之間留紙色細線，像海報的選單 */
+.tiles{display:grid;gap:2px;background:var(--paper);border-block:2px solid var(--ink)}
+
+.tile{
+  position:relative;display:grid;gap:14px;
+  padding:18px 20px 16px;min-height:44px;
+  background:var(--paper-2);color:var(--ink);
+  cursor:pointer;outline:none;
+  transition:background-color .2s ease,color .2s ease;
+  box-shadow:0 0 0 1px var(--rule);
+}
+.kbd .tile:focus-visible{box-shadow:inset 0 0 0 3px var(--ink),0 0 0 3px var(--paper)}
+.kbd .tile.soon:focus-visible{box-shadow:inset 0 0 0 3px var(--on-ink)}
+.tile:active{filter:brightness(.94)}
+.tile.soon{background:var(--ink);color:var(--on-ink)}
+.tile.closed{background:var(--paper);color:var(--muted)}
+.tile.closed .num{border-style:dashed}
+
+.head{display:flex;align-items:center;gap:14px}
+.num{
+  flex:none;display:grid;place-items:center;width:46px;height:46px;
+  border:1.5px solid currentColor;font-weight:900;font-size:1.6rem;line-height:1;
+}
+.title{flex:1;display:grid}
+.name{font-weight:600;font-size:.95rem}
+.dest{font-weight:900;font-size:1.3rem;line-height:1.2}
+.queue{
+  flex:none;font:500 .75rem/1 var(--mono);padding:7px 8px;
+  border:1.5px solid currentColor;white-space:nowrap;
+}
+.head-time{display:none;font-weight:900;font-size:1.7rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:0;align-items:stretch}
+.depart{display:flex;flex-direction:column;justify-content:center;padding-inline-end:6px}
+.status{
+  display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+  font-size:.8rem;font-weight:600;
+}
+.status::before{content:"";width:9px;height:9px;background:currentColor}
+.tile.active .status::before{background:transparent;border:1.5px solid currentColor}
+.tile.closed .status::before{background:transparent;border:1.5px dashed currentColor}
+.label{font-size:.85rem;margin-top:6px}
+.time{font-weight:900;font-size:clamp(2.7rem,13vw,3.6rem);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px;white-space:nowrap}
+.tile.demand .time{font-size:clamp(2rem,9vw,2.6rem)}
+
+/* 網點三角 + 停靠站 */
+.stops-wrap{position:relative;display:flex;align-self:center;padding-inline-start:30px}
+.stops-wrap::before{
+  content:"";position:absolute;inset-block:0;inset-inline-start:0;width:30px;
+  clip-path:polygon(0 50%,100% 0,100% 100%);
+  background-image:radial-gradient(currentColor 1px,transparent 1.4px);
+  background-size:4px 4px;opacity:.85;
+}
+.stops{
+  list-style:none;width:100%;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  border:1.5px solid currentColor;
+}
+.stops li{
+  display:flex;align-items:center;gap:6px;padding:5px 7px;
+  font-size:.78rem;line-height:1.3;border-bottom:1px solid var(--rule);
+}
+.tile.soon .stops li{border-bottom-color:color-mix(in srgb,var(--on-ink) 25%,transparent)}
+.stops li::before{content:"";flex:none;width:5px;height:5px;background:currentColor}
+.stops li:nth-last-child(-n+2){border-bottom:0}
+
+.upcoming{
+  display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;
+  padding-top:10px;border-top:1px solid currentColor;font-size:.85rem;
+}
+.upcoming b{font-weight:600}
+.upcoming span{font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums}
+.hint{display:none;font-size:.78rem;white-space:nowrap}
+
+/* 收合 */
+.tile.collapsed{padding-block:12px}
+.tile.collapsed .body,.tile.collapsed .upcoming{display:none}
+.tile.collapsed .head-time{display:block}
+.tile.collapsed .dest{font-size:1.05rem}
+.tile.collapsed .queue{display:none}
+
+.footer{
+  display:grid;gap:4px;padding:26px 20px 34px;
+  font:400 .78rem/1.5 var(--mono);color:var(--ink);
+}
+.footer::before{content:"";width:150px;border-top:1.5px solid currentColor;margin-bottom:8px}
+
+.test{margin:0 20px;padding:14px;border:1.5px dashed var(--ink);display:grid;gap:10px;font-size:.9rem}
+.test[hidden]{display:none}
+.test-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.test b{font-weight:900;margin-inline-end:auto}
+.test input,.test select,.test button{
+  font:500 16px/1 var(--mono);color:var(--ink);background:var(--paper-2);
+  border:1.5px solid var(--ink);border-radius:0;min-height:44px;padding:0 10px;
+}
+.test input[type=range]{flex:1 1 100%;padding:0;border:0;background:none;accent-color:var(--ink);min-height:32px}
+.test button{cursor:pointer}
+.test button:active{background:var(--ink);color:var(--on-ink)}
+.test button[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}
+@media (max-width:340px){
+  .body{grid-template-columns:minmax(0,1fr)}
+  .stops-wrap{padding-inline-start:0;margin-top:12px}
+  .stops-wrap::before{display:none}
+  .queue{padding:6px}
+}
+@media (prefers-contrast:more){
+  :root{--rule:currentColor}
+  .stops-wrap::before{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="ink-bleed"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.6"/></filter>
+</svg>
+
+<header class="masthead">
+  <h1>恩嘻嘻優<br>校車在哪裡</h1>
+  <div class="meta"><span id="day-indicator">班表計算中…</span><span id="clock" aria-label="現在時間">--:--</span></div>
+</header>
+
+<section class="test" id="test" hidden aria-label="測試模式">
+  <div class="test-row"><b>測試模式</b><button type="button" id="t-live">回到現在時間</button></div>
+  <div class="test-row">
+    <input type="time" id="t-time" aria-label="測試時間">
+    <select id="t-day" aria-label="測試日別"><option value="weekday">平日</option><option value="weekend">假日</option></select>
+    <button type="button" data-step="-10" aria-label="倒退 10 分鐘">−10</button>
+    <button type="button" data-step="-1" aria-label="倒退 1 分鐘">−1</button>
+    <button type="button" data-step="1" aria-label="前進 1 分鐘">+1</button>
+    <button type="button" data-step="10" aria-label="前進 10 分鐘">+10</button>
+  </div>
+  <input type="range" id="t-range" min="360" max="1439" step="1" aria-label="拖曳調整測試時間">
+</section>
+
+<main id="bus-tiles" class="tiles" aria-label="校車路線"></main>
+
+<footer class="footer">
+  <span>好一點計畫</span>
+  <span>計畫好一點</span>
+</footer>
+
+<script>
+{
+const TEST_MODE = false; // 測試版設為 true
+const override = { on: false, mins: 720, weekend: false };
+const userManualStates = {};
+const BUS_DATA = {
+  weekday: [
+    { id: "1", no: "1", name: "政大 1 路", dest: "往 好漢坡", stops: ["行政大樓","藝文中心","百年樓","好漢坡"], isDemand: true },
+    { id: "2", no: "2", name: "政大 2 路", dest: "往 六期運動場", stops: ["行政大樓","山居學習中心","百年樓","自強十舍","藝文中心","研創中心","好漢坡","六期運動場","自強一二三舍","行政大樓"], times: ["07:30","07:50","08:20","08:40","09:20","09:50","10:20","10:50","11:20","11:50","12:20","13:20","13:50","14:20","14:50","15:20","15:50","16:20","16:50","17:20","17:50","18:10","19:10","20:10","21:30"] },
+    { id: "3", no: "3", name: "政大 3 路", dest: "往 山居學習中心", stops: ["行政大樓","好漢坡","百年樓","自強一二三舍","藝文中心","山居學習中心"], times: ["08:10","09:30","10:10","10:30","11:10","11:30","12:10","13:10","13:30","14:10","14:30","15:10","15:30","16:30","17:10","17:30","18:00","18:08","18:16","18:24","18:32","18:40","18:48","18:56","19:00","19:10","19:20","19:30","19:40","19:50","20:00","20:15","20:30","20:45","21:00","21:15","21:30","21:45","22:00","22:15","22:30","22:45","23:00"] }
+  ],
+  weekend: [
+    { id: "2-WK", no: "2", name: "政大 2 路", dest: "往 六期運動場", stops: ["行政大樓","山居學習中心","百年樓","自強十舍","藝文中心","研究大樓","好漢坡","六期運動場","自強一二三舍","行政大樓"], times: ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"] },
+    { id: "3-WK", no: "3", name: "政大 3 路", dest: "往 山居學習中心", stops: ["行政大樓","好漢坡","百年樓","自強一二三舍","藝文中心","山居學習中心"], times: ["08:20","08:40","09:20","09:40","10:20","10:40","11:20","12:20","12:40","13:20","13:40","14:20","14:40","15:20","15:40","16:20","16:40","17:20","18:20","18:40","19:00","19:20","19:40","20:00","20:20","20:40","21:00","21:20","21:40","22:00","22:15","22:30","22:45","23:00"] }
+  ]
+};
+const toMins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const pad = n => String(n).padStart(2, '0');
+const lastCollapsed = {};
+
+function compute(route, isWeekend, now) {
+  let queue, isClosed = false, diff = 0, bus = null, autoCollapsed = false;
+  // 規則二：排隊指示
+  if (route.id === "1") {
+    queue = "左側隊伍";
+    // 規則一：1 路營運 07:30–17:55
+    if (now < 450 || now > 1075) isClosed = true;
+  } else if (!isWeekend) {
+    queue = now < 1070 ? "右側隊伍" : (route.name.includes("3 路") ? "左側隊伍" : "右側隊伍");
+  } else {
+    queue = "左側隊伍";
+  }
+  // 規則三：超過 45 分鐘自動收合（含 3 分鐘發車緩衝）
+  if (!route.isDemand) {
+    bus = route.times.find(t => toMins(t) + 3 >= now) || null;
+    if (bus) { diff = toMins(bus) - now; if (diff > 45) autoCollapsed = true; }
+    else isClosed = true;
+  } else if (isClosed) autoCollapsed = true;
+
+  const later = bus ? route.times.filter(t => toMins(t) > toMins(bus)).slice(0, 2) : [];
+  const state = isClosed ? 'closed' : (route.isDemand || diff <= 10) ? 'soon' : 'active';
+  return { queue, isClosed, diff, bus, autoCollapsed, later, state };
+}
+
+function tileHTML(route, c, collapsed) {
+  let status, label, time;
+  if (c.isClosed) {
+    status = "已收班";
+    label = route.isDemand ? "服務結束" : "今日服務已結束";
+    time = "--:--";
+  } else if (route.isDemand) {
+    status = "營運中";
+    label = "服務頻率：五到八分鐘一班";
+    time = "機動發車";
+  } else {
+    status = c.diff < 0 ? "發車中" : c.state === 'soon' ? "即將發車" : "候車中";
+    label = c.diff < 0 ? "發車中（三分鐘緩衝）" : `下一班發車（${c.diff} 分鐘後）`;
+    time = c.bus;
+  }
+  const headTime = c.isClosed ? "--:--" : route.isDemand ? "機動" : c.bus;
+  const stops = route.stops.map(s => `<li>${s}</li>`).join('');
+  const upcoming = route.isDemand || c.isClosed ? '' :
+    `<div class="upcoming"><b>後續班次</b>${c.later.length ? c.later.map(t => `<span>${t}</span>`).join('') : '<span>末班已過</span>'}</div>`;
+
+  return `
+    <div class="head">
+      <span class="num" aria-hidden="true">${route.no}</span>
+      <div class="title"><span class="name">${route.name}</span><span class="dest">${route.dest}</span></div>
+      <span class="queue">${c.queue}</span>
+      <span class="head-time">${headTime}</span>
+    </div>
+    <div class="body">
+      <div class="depart">
+        <span class="status">${status}</span>
+        <span class="time">${time}</span>
+        <span class="label">${label}</span>
+      </div>
+      <div class="stops-wrap"><ol class="stops" aria-label="停靠站">${stops}</ol></div>
+    </div>
+    ${upcoming}`;
+}
+
+function toggleTile(id) {
+  userManualStates[id] = !lastCollapsed[id];
+  updateApp(id);
+}
+
+function updateApp(focusId) {
+  const d = new Date();
+  const isWeekend = override.on ? override.weekend : (d.getDay() === 0 || d.getDay() === 6);
+  const now = override.on ? override.mins : d.getHours() * 60 + d.getMinutes();
+  if (TEST_MODE) syncTest(now, isWeekend);
+  const routes = isWeekend ? BUS_DATA.weekend : BUS_DATA.weekday;
+
+  document.getElementById('day-indicator').textContent = isWeekend ? "假日模式 · 2／3 路營運中" : "平日模式 · 全線營運中";
+  document.getElementById('clock').textContent = `${override.on ? '測試 ' : ''}${pad(Math.floor(now / 60))}:${pad(now % 60)}`;
+
+  const grid = document.getElementById('bus-tiles');
+  const active = document.activeElement;
+  const keepFocus = focusId || (active && active.dataset && active.dataset.id);
+  grid.innerHTML = '';
+
+  routes.forEach(route => {
+    const c = compute(route, isWeekend, now);
+    const collapsed = userManualStates[route.id] !== undefined ? userManualStates[route.id] : c.autoCollapsed;
+    lastCollapsed[route.id] = collapsed;
+
+    const tile = document.createElement('div');
+    tile.className = `tile ${c.state}${route.isDemand ? ' demand' : ''}${collapsed ? ' collapsed' : ''}`;
+    tile.dataset.id = route.id;
+    tile.tabIndex = 0;
+    tile.setAttribute('role', 'button');
+    tile.setAttribute('aria-expanded', String(!collapsed));
+    tile.innerHTML = tileHTML(route, c, collapsed);
+    tile.addEventListener('click', () => toggleTile(route.id));
+    tile.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTile(route.id); }
+    });
+    grid.appendChild(tile);
+  });
+
+  if (keepFocus) {
+    const t = grid.querySelector(`[data-id="${keepFocus}"]`);
+    if (t) t.focus({ preventScroll: true });
+  }
+}
+
+function syncTest(now, wk) {
+  const v = `${pad(Math.floor(now / 60))}:${pad(now % 60)}`;
+  const ti = document.getElementById('t-time');
+  if (document.activeElement !== ti) ti.value = v;
+  document.getElementById('t-range').value = now;
+  document.getElementById('t-day').value = wk ? 'weekend' : 'weekday';
+  document.getElementById('t-live').setAttribute('aria-pressed', String(!override.on));
+}
+function setTest(mins, weekend) {
+  if (!override.on) {
+    const d = new Date();
+    override.mins = d.getHours() * 60 + d.getMinutes();
+    override.weekend = d.getDay() === 0 || d.getDay() === 6;
+  }
+  override.on = true;
+  if (mins !== undefined) override.mins = Math.min(1439, Math.max(0, mins));
+  if (weekend !== undefined) override.weekend = weekend;
+  // 換時間時清掉手動展開狀態，讓自動收合規則重新生效
+  for (const k in userManualStates) delete userManualStates[k];
+  updateApp();
+}
+if (TEST_MODE) {
+  document.getElementById('test').hidden = false;
+  document.getElementById('t-time').addEventListener('input', e => {
+    if (!e.target.value) return;
+    const [h, m] = e.target.value.split(':').map(Number); setTest(h * 60 + m);
+  });
+  document.getElementById('t-range').addEventListener('input', e => setTest(Number(e.target.value)));
+  document.getElementById('t-day').addEventListener('change', e => setTest(undefined, e.target.value === 'weekend'));
+  document.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => setTest((override.on ? override.mins : new Date().getHours() * 60 + new Date().getMinutes()) + Number(b.dataset.step))));
+  document.getElementById('t-live').addEventListener('click', () => { override.on = false; for (const k in userManualStates) delete userManualStates[k]; updateApp(); });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Tab') document.documentElement.classList.add('kbd'); });
+document.addEventListener('pointerdown', () => document.documentElement.classList.remove('kbd'));
+
+setInterval(() => updateApp(), 15000);
+updateApp();
+}
+</script>
+</body>
+</html>
