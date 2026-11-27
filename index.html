@@ -290,7 +290,8 @@ function tileHTML(route, c, collapsed) {
     label = seg("服務頻率：", "五到八分鐘一班");
     time = "機動發車";
   } else {
-    status = c.diff < 0 ? "發車中" : c.state === 'soon' ? "即將發車" : "候車中";
+    // 發車前 10 分鐘內：即將發車；15 分鐘內：候車中；更早：未發車
+    status = c.diff < 0 ? "發車中" : c.state === 'soon' ? "即將發車" : c.diff <= 15 ? "候車中" : "未發車";
     label = c.diff < 0 ? seg("發車中", "（三分鐘緩衝）")
       : c.diff > 60 ? seg("下一班發車", `（${c.bus}）`)
       : seg("下一班發車", `（${c.diff} 分鐘後）`);
