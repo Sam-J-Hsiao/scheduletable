@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#EFEBE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121629" media="(prefers-color-scheme: dark)">
 <title>恩嘻嘻優校車在哪裡</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,32 +25,26 @@ TYPE    Noto Serif TC（標題、時間），IBM Plex Mono 只用於小型註記
   --on-ink:light-dark(#F7F4EF,#0F1326);
   --muted:light-dark(#5C5B66,#9A9EB5);
   --rule:light-dark(rgba(36,67,184,.22),rgba(169,188,255,.22));
-  --grain-blend:light-dark(multiply,screen);
-  --grain-op:light-dark(.2,.08);
+    /* 紙張顆粒：中性色的細小斑點，直接畫在每個區塊自己的背景上，跟著內容捲動 */
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
   --title-tracking:.02em;   /* ← 標題字距：正值拉開、負值收緊，例如 .04em 或 -.06em */
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
 }
 :root[data-theme=light]{color-scheme:light}
-:root[data-theme=dark]{color-scheme:dark}
+:root[data-theme=dark]{color-scheme:dark;--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E")}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E")}}
 *{box-sizing:border-box;margin:0;padding:0;min-width:0}
-html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+html{background:var(--paper);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 body,body *{-webkit-user-select:none;user-select:none;caret-color:transparent;-webkit-touch-callout:none}
 input,select{-webkit-user-select:auto;user-select:auto;caret-color:auto}
 body{
   font:400 17px/1.5 var(--serif);
-  background:var(--paper);color:var(--ink);
+  background:var(--grain) var(--paper);color:var(--ink);
   max-width:640px;margin:0 auto;overflow-x:clip;
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   min-height:100vh;
 }
-/* 紙張顆粒 */
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:10;
-  opacity:var(--grain-op);mix-blend-mode:var(--grain-blend);
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .42 0 0 0 0 .38 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 /* 刊頭 */
 .masthead{padding:32px 20px 22px}
 .masthead h1{
@@ -68,7 +64,7 @@ body::before{
 .tile{
   position:relative;display:grid;gap:14px;
   padding:18px 20px 16px;min-height:44px;
-  background:var(--paper-2);color:var(--ink);
+  background-color:var(--paper-2);background-image:var(--grain);color:var(--ink);
   cursor:pointer;outline:none;
   transition:background-color .2s ease,color .2s ease;
   box-shadow:0 0 0 1px var(--rule);
@@ -76,8 +72,8 @@ body::before{
 .kbd .tile:focus-visible{box-shadow:inset 0 0 0 3px var(--ink),0 0 0 3px var(--paper)}
 .kbd .tile.soon:focus-visible{box-shadow:inset 0 0 0 3px var(--on-ink)}
 .tile:active{filter:brightness(.94)}
-.tile.soon{background:var(--ink);color:var(--on-ink)}
-.tile.closed{background:var(--paper);color:var(--muted)}
+.tile.soon{background-color:var(--ink);color:var(--on-ink)}
+.tile.closed{background-color:var(--paper);color:var(--muted)}
 .tile.closed .num{border-style:dashed}
 
 .head{display:flex;align-items:center;gap:14px}
