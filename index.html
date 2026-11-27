@@ -8,14 +8,17 @@
 <title>恩嘻嘻優校車在哪裡</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /*
 VOICE   印刷海報的冷靜與直接：一眼看到下一班車。
 IDEA    絹印的校園公車時刻卡：米白紙、單色印刷藍、網點。
 PICTURE 每條路線是一條印刷藍色帶，最近的班次滿版上墨，旁邊用網點三角延伸出停靠站。
 COLOUR  紙 #EFEBE3、印刷藍 #2443B8；夜間為深藍紙與淡藍墨。
-TYPE    Noto Serif TC（標題、時間），IBM Plex Mono 只用於小型註記。
+TYPE    字體準則（三種字體，各有固定用途）：
+        · 襯線 Noto Serif TC：內容——標題、路線、目的地、大時間、狀態、說明、站名
+        · 黑體 Noto Sans TC：功能性文字——模式、隊伍標籤、後續班次列的文字、頁尾、測試面板
+        · 等寬 IBM Plex Mono：只用於純數字的時間註記——右上角時鐘、後續班次時刻
 */
 :root{
   color-scheme:light dark;
@@ -33,6 +36,7 @@ TYPE    Noto Serif TC（標題、時間），IBM Plex Mono 只用於小型註記
   --title-top:16px;   /* ← 標題離頁面最上方的距離 */
   --title-tracking:.02em;   /* ← 標題字距：正值拉開、負值收緊，例如 .04em 或 -.06em */
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
 }
 :root[data-theme=light]{color-scheme:light}
@@ -58,9 +62,10 @@ body{
 .meta{
   display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;
   margin-top:18px;padding-top:10px;border-top:1.5px solid var(--ink);
-  font:500 .8rem/1.4 var(--mono);
+  font:500 .8rem/1.4 var(--sans);
 }
-.meta #clock{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.meta #clock{margin-inline-start:auto;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.meta .clock-tag{font-family:var(--sans);margin-inline-end:6px}
 
 /* 路線清單：藍色條之間留紙色細線，像海報的選單 */
 .tiles{display:grid;border-block:2px solid var(--ink)}
@@ -89,7 +94,7 @@ body{
 .name{font-weight:600;font-size:.95rem}
 .dest{font-weight:900;font-size:1.3rem;line-height:1.2}
 .queue{
-  flex:none;font:500 .75rem/1 var(--mono);padding:7px 8px;
+  flex:none;font:500 .75rem/1 var(--sans);padding:7px 8px;
   border:1.5px solid currentColor;white-space:nowrap;
 }
 .head-time{display:none;font-weight:900;font-size:1.7rem;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -132,10 +137,10 @@ body{
 
 .upcoming{
   display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;
-  padding-top:10px;border-top:1px solid currentColor;font-size:.85rem;
+  padding-top:10px;border-top:1px solid currentColor;font:400 .85rem/1.4 var(--sans);
 }
-.upcoming b{font-weight:600}
-.upcoming span{font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums}
+.upcoming b{font-weight:500}
+.upcoming .t{font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums}
 .hint{display:none;font-size:.78rem;white-space:nowrap}
 
 /* 收合 */
@@ -147,18 +152,19 @@ body{
 
 .footer{
   display:grid;gap:4px;padding:26px 20px 34px;
-  font:400 .78rem/1.5 var(--mono);color:var(--ink);
+  font:400 .78rem/1.5 var(--sans);color:var(--ink);
 }
 .footer::before{content:"";width:150px;border-top:1.5px solid currentColor;margin-bottom:8px}
 
-.test{margin:0 20px;padding:14px;border:1.5px dashed var(--ink);display:grid;gap:10px;font-size:.9rem}
+.test{margin:0 20px;padding:14px;border:1.5px dashed var(--ink);display:grid;gap:10px;font:400 .9rem/1.4 var(--sans)}
 .test[hidden]{display:none}
 .test-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.test b{font-weight:900;margin-inline-end:auto}
+.test b{font-weight:700;margin-inline-end:auto}
 .test input,.test select,.test button{
-  font:500 16px/1 var(--mono);color:var(--ink);background:var(--paper-2);
+  font:500 16px/1 var(--sans);color:var(--ink);background:var(--paper-2);
   border:1.5px solid var(--ink);border-radius:0;min-height:44px;padding:0 10px;
 }
+.test input[type=time],.test [data-step]{font-family:var(--mono)}
 .test input[type=range]{flex:1 1 100%;padding:0;border:0;background:none;accent-color:var(--ink);min-height:32px}
 .test button{cursor:pointer}
 .test button:active{background:var(--ink);color:var(--on-ink)}
@@ -293,7 +299,7 @@ function tileHTML(route, c, collapsed) {
   const headTime = c.isClosed ? "--:--" : route.isDemand ? "機動" : c.bus;
   const stops = route.stops.map(s => `<li>${s}</li>`).join('');
   const upcoming = route.isDemand || c.isClosed ? '' :
-    `<div class="upcoming"><b>後續班次</b>${c.later.length ? c.later.map(t => `<span>${t}</span>`).join('') : '<span>末班已過</span>'}</div>`;
+    `<div class="upcoming"><b>後續班次</b>${c.later.length ? c.later.map(t => `<span class="t">${t}</span>`).join('') : '<span>末班已過</span>'}</div>`;
 
   return `
     <div class="head">
@@ -335,7 +341,7 @@ function updateApp(focusId) {
   const routes = isWeekend ? BUS_DATA.weekend : BUS_DATA.weekday;
 
   document.getElementById('day-indicator').textContent = isWeekend ? "假日模式 · 2／3 路營運中" : "平日模式 · 全線營運中";
-  document.getElementById('clock').textContent = `${override.on ? '測試 ' : ''}${pad(Math.floor(now / 60))}:${pad(now % 60)}`;
+  document.getElementById('clock').innerHTML = `${override.on ? '<span class="clock-tag">測試</span>' : ''}${pad(Math.floor(now / 60))}:${pad(now % 60)}`;
 
   const grid = document.getElementById('bus-tiles');
   const active = document.activeElement;
