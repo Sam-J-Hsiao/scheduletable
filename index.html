@@ -30,7 +30,7 @@ TYPE    Noto Serif TC（標題、時間），IBM Plex Mono 只用於小型註記
   /* 整頁背景的顆粒：暗點與亮點互相抵消，平均顏色＝--paper，
      這樣 Safari 狀態列、網址列後方用的純色底色，才會和頁面看起來一樣 */
   --grain-page:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)' opacity='0.08'/%3E%3Crect width='100%25' height='100%25' filter='url(%23l)' opacity='0.77'/%3E%3C/svg%3E");
-  --title-top:32px;   /* ← 標題離頁面最上方的距離 */
+  --title-top:16px;   /* ← 標題離頁面最上方的距離 */
   --title-tracking:.02em;   /* ← 標題字距：正值拉開、負值收緊，例如 .04em 或 -.06em */
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
@@ -63,7 +63,8 @@ body{
 .meta #clock{margin-inline-start:auto;font-variant-numeric:tabular-nums}
 
 /* 路線清單：藍色條之間留紙色細線，像海報的選單 */
-.tiles{display:grid;gap:1px;background:var(--rule);border-block:2px solid var(--ink)}  /* 卡片之間只留上下分隔線，左右不加框，和標題區一致 */
+.tiles{display:grid;border-block:2px solid var(--ink)}
+.tile+.tile{border-top:1px solid var(--rule)}  /* 卡片之間只留上下分隔線，左右不加框，和標題區一致 */
 
 .tile{
   position:relative;display:grid;gap:14px;
@@ -103,6 +104,7 @@ body{
 .tile.active .status::before{background:transparent;border:1.5px solid currentColor}
 .tile.closed .status::before{background:transparent;border:1.5px dashed currentColor}
 .label{font-size:.85rem;margin-top:6px}
+.label .seg{white-space:nowrap}  /* 每段不拆開，只在段與段之間換行 */
 .time{font-weight:900;font-size:clamp(2.2rem,10vw,3.2rem);line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums;margin-top:4px;white-space:nowrap}
 .tile.demand .time{font-size:clamp(1.6rem,7vw,2.4rem)}
 
@@ -171,7 +173,23 @@ body{
   :root{--rule:currentColor}
   .stops-wrap::before{opacity:1}
 }
-@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+/* 展開／收合：版面轉場（View Transitions）＋內容淡入，只在點擊時播放 */
+.footer{view-transition-name:footer}
+::view-transition-group(*){animation-duration:.26s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+::view-transition-group(.tile){overflow:clip}
+/* 只有被點的那張卡片淡入淡出，其他卡片只是平滑移位 */
+::view-transition-old(.toggled){animation:vt-out .12s ease-out both}
+::view-transition-new(.toggled){animation:vt-in .2s .06s ease-out both}
+::view-transition-old(.tile),::view-transition-new(.tile){height:100%;object-fit:none;object-position:top}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-in{from{opacity:0}}
+/* 不支援版面轉場的瀏覽器：只淡入展開的內容 */
+.tile.opening .body,.tile.opening .upcoming{animation:fade-in .22s ease-out both}
+@keyframes fade-in{from{opacity:0;transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){
+  .tile{transition:none}
+  .tile.opening .body,.tile.opening .upcoming{animation:none}
+}
 </style>
 </head>
 <body>
@@ -253,19 +271,23 @@ function compute(route, isWeekend, now) {
   return { queue, isClosed, diff, bus, autoCollapsed, later, state };
 }
 
+const seg = (...parts) => parts.map(p => `<span class="seg">${p}</span>`).join('');
+
 function tileHTML(route, c, collapsed) {
   let status, label, time;
   if (c.isClosed) {
     status = "已收班";
-    label = route.isDemand ? "服務結束" : "今日服務已結束";
+    label = seg(route.isDemand ? "服務結束" : "今日服務已結束");
     time = "--:--";
   } else if (route.isDemand) {
     status = "營運中";
-    label = "服務頻率：五到八分鐘一班";
+    label = seg("服務頻率：", "五到八分鐘一班");
     time = "機動發車";
   } else {
     status = c.diff < 0 ? "發車中" : c.state === 'soon' ? "即將發車" : "候車中";
-    label = c.diff < 0 ? "發車中（三分鐘緩衝）" : `下一班發車（${c.diff} 分鐘後）`;
+    label = c.diff < 0 ? seg("發車中", "（三分鐘緩衝）")
+      : c.diff > 60 ? seg("下一班發車", `（${c.bus}）`)
+      : seg("下一班發車", `（${c.diff} 分鐘後）`);
     time = c.bus;
   }
   const headTime = c.isClosed ? "--:--" : route.isDemand ? "機動" : c.bus;
@@ -291,9 +313,18 @@ function tileHTML(route, c, collapsed) {
     ${upcoming}`;
 }
 
+let opening = null, toggled = null;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 function toggleTile(id) {
   userManualStates[id] = !lastCollapsed[id];
-  updateApp(id);
+  toggled = id;
+  const render = () => { opening = userManualStates[id] ? null : id; updateApp(id); opening = null; };
+  if (document.startViewTransition && !reduceMotion.matches) {
+    document.startViewTransition(render).finished.finally(() => { toggled = null; });
+  } else {
+    render();
+    toggled = null;
+  }
 }
 
 function updateApp(focusId) {
@@ -317,7 +348,9 @@ function updateApp(focusId) {
     lastCollapsed[route.id] = collapsed;
 
     const tile = document.createElement('div');
-    tile.className = `tile ${c.state}${route.isDemand ? ' demand' : ''}${collapsed ? ' collapsed' : ''}`;
+    tile.className = `tile ${c.state}${route.isDemand ? ' demand' : ''}${collapsed ? ' collapsed' : ''}${opening === route.id && !document.startViewTransition ? ' opening' : ''}`;
+    tile.style.viewTransitionName = `tile-${route.id}`;
+    tile.style.viewTransitionClass = toggled === route.id ? 'tile toggled' : 'tile';
     tile.dataset.id = route.id;
     tile.tabIndex = 0;
     tile.setAttribute('role', 'button');
