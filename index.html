@@ -340,7 +340,10 @@ function updateApp(focusId) {
   if (TEST_MODE) syncTest(now, isWeekend);
   const routes = isWeekend ? BUS_DATA.weekend : BUS_DATA.weekday;
 
-  document.getElementById('day-indicator').textContent = isWeekend ? "假日模式 · 2／3 路營運中" : "平日模式 · 全線營運中";
+  // 模式列：列出目前仍在營運的路線，例如「平日模式 · 1、2、3 路營運中」
+  const running = routes.filter(r => !compute(r, isWeekend, now).isClosed).map(r => r.no);
+  document.getElementById('day-indicator').textContent =
+    `${isWeekend ? "假日模式" : "平日模式"} · ${running.length ? `${running.join('、')} 路營運中` : "今日全線已收班"}`;
   document.getElementById('clock').innerHTML = `${override.on ? '<span class="clock-tag">測試</span>' : ''}${pad(Math.floor(now / 60))}:${pad(now % 60)}`;
 
   const grid = document.getElementById('bus-tiles');
